@@ -15,46 +15,13 @@ import math
 ##  - accept GFF format input (instead of / as well as) TSV
 ##  - rename column containing the reference aa as 'ref'
 
-def make_sift_files(
-    vars_file, # file containing table of variants in protein-coding regions
-    ann_file, # genome annotation file
-    fasta_file, # amino acid multi-fasta file
-    counts_file, # normalised read counts file
-    refname,
-    outdir): # output directory
+def get_codon_pos(
+    vars_data, # table of variants
+    cds_annot, # annotations of protein-coding genes in reference strain
+    gene_seq): # amino acid sequences of genes
 
-    # read input
-    count_data = pd.read_csv(counts_file, sep = "\t")
-    vars_data = pd.read_csv(vars_file, sep = "\t", low_memory=False)
-    annotation = pd.read_csv(ann_file, sep = "\t")
-    gene_seq = Fasta(fasta_file)
-
-    # subset to strains present in count data
-    strain_names = count_data.columns.values.tolist()
-    keep_cols = ['pos', 'ref'] + strain_names
-    vars_data = vars_data[keep_cols]
-
-    # remove variants where all strains identical to ref:
-    vars_data_alleles = vars_data[['ref'] + strain_names]
-    rm_rows = vars_data_alleles.eq(vars_data_alleles.iloc[:, 0], axis=0).all(1)
-    vars_data = vars_data[~rm_rows]
-
-    # extract gene name + position
-    pos_split = vars_data['pos'].str.split("_")
-    var_pos = [int(p[0]) for p in pos_split]
-    var_genes = [p[1] for p in pos_split]
-    vars_data['pos'] = var_pos
-    vars_data['gene'] = var_genes
-
-    # prepare annotation data
-    annot_sub = annotation[['Locus Tag', 'Feature Type', 'Start', 'End', 'Strand', 'Gene Name']]
-    cds_annot = annot_sub[annot_sub['Feature Type']=='CDS']
-    cds_strands = cds_annot['Strand'].tolist()
-    vars_sub = vars_data.copy(deep=True)
-
-    # get codon/amino acid positions in the reference strain
     codon_pos_list = []
-    for index, row in vars_sub.iterrows():
+    for index, row in vars_data.iterrows():
         pos = int(row['pos'])
         gene = row['gene']
         ref_aa = row['ref']
@@ -95,7 +62,47 @@ def make_sift_files(
                         codon_pos_list.append(np.nan)
         else:
             codon_pos_list.append(np.nan)
-    vars_sub['codon_pos'] = codon_pos_list
+
+        return codon_pos_list
+
+
+def make_sift_files(
+    vars_file, # file containing table of variants in protein-coding regions
+    ann_file, # genome annotation file
+    fasta_file, # amino acid multi-fasta file
+    counts_file, # normalised read counts file
+    refname,
+    outdir): # output directory
+
+    # read input
+    count_data = pd.read_csv(counts_file, sep = "\t")
+    vars_data = pd.read_csv(vars_file, sep = "\t", low_memory=False)
+    annotation = pd.read_csv(ann_file, sep = "\t")
+    gene_seq = Fasta(fasta_file)
+
+    # subset to strains present in count data
+    strain_names = count_data.columns.values.tolist()
+    keep_cols = ['pos', 'ref'] + strain_names
+    vars_data = vars_data[keep_cols]
+
+    # remove variants where all strains identical to ref:
+    vars_data_alleles = vars_data[['ref'] + strain_names]
+    rm_rows = vars_data_alleles.eq(vars_data_alleles.iloc[:, 0], axis=0).all(1)
+    vars_data = vars_data[~rm_rows]
+
+    # extract gene name + position
+    pos_split = vars_data['pos'].str.split("_")
+    var_pos = [int(p[0]) for p in pos_split]
+    var_genes = [p[1] for p in pos_split]
+    vars_data['pos'] = var_pos
+    vars_data['gene'] = var_genes
+
+    # prepare annotation data
+    annot_sub = annotation[['Locus Tag', 'Feature Type', 'Start', 'End', 'Strand', 'Gene Name']]
+    cds_annot = annot_sub[annot_sub['Feature Type']=='CDS']
+    vars_sub = vars_data.copy(deep=True)
+
+    vars_sub['codon_pos'] = get_codon_pos(vars_sub, cds_annot, gene_seq)
 
     ## remove variants where the given reference AA didn't match the sequence
     vars_sub = vars_sub[vars_sub['codon_pos'].notna()]
