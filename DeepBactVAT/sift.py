@@ -1,19 +1,42 @@
-import subprocess
-import tempfile
+#
+
 import os
 import sys
 import re
-import collections
-from itertools import chain
 import numpy as np
 import pandas as pd
-from pyfaidx import Fasta
+import subprocess
+import tempfile
+import collections
 import math
+import ftplib
+from itertools import chain
+from pyfaidx import Fasta
 
 
 ## TODO:
 ##  - accept GFF format input (instead of / as well as) TSV
 ##  - rename column containing the reference aa as 'ref'
+
+
+def get_db(
+    db_name = 'uniref90', # name of the db (uniref90 / uniref100)
+    outdir = './'): # output directory for storing db
+    ftp_host='ftp.uniprot.org'
+    if db_name=='uniref90':
+        ftp_path='/pub/databases/uniprot/uniref/uniref90'
+        filename='uniref90.fasta.gz'
+    elif db_name=='uniref100':
+        ftp_path='/pub/databases/uniprot/uniref/uniref100'
+        filename='uniref100.fasta.gz'
+    else:
+
+    outf=os.path.join(outdir, 'uniref_db.fasta.gz')
+    ftp=ftplib.FTP(ftp_host)
+    ftp.login()
+    ftp.cwd(ftp_path)
+    # ftp.retrlines("LIST")
+    ftp.retrbinary(f"RETR {filename}", open(outf, 'wb').write)
 
 def get_codon_pos(
     vars_data, # table of variants
@@ -63,7 +86,7 @@ def get_codon_pos(
         else:
             codon_pos_list.append(np.nan)
 
-        return codon_pos_list
+    return codon_pos_list
 
 
 def make_sift_files(
@@ -71,7 +94,6 @@ def make_sift_files(
     ann_file, # genome annotation file
     fasta_file, # amino acid multi-fasta file
     counts_file, # normalised read counts file
-    refname,
     outdir): # output directory
 
     # read input
@@ -137,27 +159,33 @@ def make_sift_files(
             for var in all_vars:
                 f.write("%s\n" % var)
 
+    return
 
-def run_sift(
-    query, # query sequences
-    subst, # aa substitutions directory
-    database, # database to search
-    outdir, # output directory
-    kmer=5, # length of kmers used for database search (default = 5)
-    maxcand=5000, # number of database sequences retained for local alignment (default = 5000)
-    threads=32, # number of threads to use
-    evalue=0.0001, # e-value threshold (default = 0.0001)
-    quiet=False):
+
+
+def run_sift(query, vars_file, ann_file, fasta_file, counts_file, outdir):
+    # download UNIPROT db
+    get_db(outdir = outdir)
+
+    # make SIFT input files
+    make_sift_files(
+        vars_file = vars_file,
+        ann_file = ann_file,
+        fasta_file = fasta_file,
+        counts_file = counts_file,
+        outdir = outdir
+    )
 
     cmd = "sift4g"
     cmd += " --query " + query
-    cmd += " --subst " + subst
-    cmd += " --database " + database
-    cmd += " --out " + outdir
-    cmd += " --kmer-length " + str(kmer)
-    cmd += " --max-candidates " + str(maxcand)
-    cmd += " --threads " + str(threads)
-    cmd += " --evalue " + str(evalue)
+    cmd += " --subst " + os.path.join(outdir, 'subst_files')
+    cmd += " --database " + os.path.join(outdir, 'uniref_db.fasta.gz')
+    cmd += " --out " + os.path.join(outdir, 'sift_out')
+    # default params (not currently modifiable):
+    cmd += " --kmer-length " + "5"
+    cmd += " --max-candidates " + "5000"
+    cmd += " --threads " + "1" # crashes when >1 core used
+    cmd += " --evalue " + "0.0001"
 
     if not quiet:
         print("executing command: " + cmd)
