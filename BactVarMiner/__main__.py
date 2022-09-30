@@ -2,7 +2,7 @@ import os, sys
 import argparse
 import textwrap
 
-## TODO: import other modules from the DeepBactVAT here
+## TODO: import other modules from the BactVarMiner here
 
 from .__init__ import __version__
 
@@ -23,7 +23,7 @@ def main():
 
     # add subcommands
     dbv_subparser = subparsers.add_parser("run",
-        help="run the DeepBactVAT pipeline")
+        help="run the BactVarMiner pipeline")
     dbv_subparser = dbv_parser(dbv_subparser)
 
     ## TODO: add subparsers for different functionalities

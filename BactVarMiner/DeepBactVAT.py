@@ -1,4 +1,4 @@
-# Runs DeepBactVAT on a set of bacterial genomic variants
+# Runs BactVarMiner on a set of bacterial genomic variants
 
 import os
 import argparse
@@ -9,7 +9,7 @@ from .__init__ import __version__
 
 def dbv_parser(parser):
 
-    parser.description = "Run DeepBactVAT on a set of bacterial genomic variants"
+    parser.description = "Run BactVarMiner on a set of bacterial genomic variants"
 
     # Arguments for input and output files
     io_opts = parser.add_argument_group("Input/output")
@@ -71,13 +71,13 @@ def dbv_parser(parser):
                         action = "version",
                         version = "%(prog)s " + __version__)
 
-    parser.set_defaults(func=DeepBactVAT)
+    parser.set_defaults(func=BactVarMiner)
 
     return parser
 
 
 
-def DeepBactVAT(args):
+def BactVarMiner(args):
 
     print("Running SIFT")
 
@@ -98,7 +98,7 @@ def main():
     parser = dbv_parser(parser)
     args = parser.parse_args()
 
-    # run DeepBactVAT
+    # run BactVarMiner
     args.func(args)
 
     return

@@ -20,13 +20,13 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 setup(
-    name="DeepBactVAT",
+    name="BactVarMiner",
     version="1.0.0",
     author="Adam Dinan, Aaron Weimann",
     author_email="adam1989ie@gmail.com",
     description="A command line tool that uses deep learning to score bacterial genetic variants",
-    packages=['DeepBactVAT'],
-    url="https://github.com/adamd3/DeepBactVAT",
+    packages=['BactVarMiner'],
+    url="https://github.com/adamd3/BactVarMiner",
     python_requires='>=3.8.0',
     # install_requires=[]
     keywords='bacterial variant association eQTL',
@@ -39,7 +39,7 @@ setup(
     ],
     entry_points={
         'console_scripts':
-        ['DeepBactVAT = DeepBactVAT.__main__:main',],
+        ['BactVarMiner = BactVarMiner.__main__:main',],
     },
     extras_require={"test": "pytest"},
 )
