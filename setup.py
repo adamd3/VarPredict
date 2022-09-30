@@ -22,14 +22,14 @@ def find_version(*file_paths):
 setup(
     name="BactVarMiner",
     version="1.0.0",
-    author="Adam Dinan, Aaron Weimann",
+    author="Adam Dinan",
     author_email="adam1989ie@gmail.com",
-    description="A command line tool that uses deep learning to score bacterial genetic variants",
+    description="A command line tool for annotating bacterial genetic variants",
     packages=['BactVarMiner'],
     url="https://github.com/adamd3/BactVarMiner",
     python_requires='>=3.8.0',
     # install_requires=[]
-    keywords='bacterial variant association eQTL',
+    keywords='bacterial variant genetic annotation burden scoring',
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
