@@ -1,4 +1,4 @@
-#
+# Set up data and run SIFT
 
 import os
 import sys
@@ -30,7 +30,7 @@ def get_db(
         ftp_path='/pub/databases/uniprot/uniref/uniref100'
         filename='uniref100.fasta.gz'
     else:
-
+        raise ValueError("`db_name` must be one of `uniref90` or `uniref100`")
     outf=os.path.join(outdir, 'uniref_db.fasta.gz')
     ftp=ftplib.FTP(ftp_host)
     ftp.login()
