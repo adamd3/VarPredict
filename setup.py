@@ -27,7 +27,7 @@ setup(
     description="A command line tool for annotating bacterial genetic variants",
     packages=['BactVarMiner'],
     url="https://github.com/adamd3/BactVarMiner",
-    python_requires='>=3.8.0',
+    python_requires='>=3.7.0',
     # install_requires=[]
     keywords='bacterial variant genetic annotation burden scoring',
     classifiers=[
