@@ -2,8 +2,8 @@
 
 import os
 import argparse
-
-## TODO: import internal modules here
+from .is_valid import *
+from .parse_gff import *
 
 from .__init__ import __version__
 
@@ -18,7 +18,7 @@ def dbv_parser(parser):
                         dest = "output_dir",
                         required = True,
                         help = "Location of output directory, which should already exist",
-                        type = lambda x: is_valid_folder(parser, x))
+                        type = lambda x: is_valid_dir(parser, x))
     io_opts.add_argument("-v",
                         "--vars",
                         dest = "vars_f",
@@ -34,23 +34,16 @@ def dbv_parser(parser):
     io_opts.add_argument("-f",
                         "--fasta",
                         dest = "fasta_f",
-                        help = "Multi-FASTA file containing amino acid sequences for each non-reference " +
-                        "strain in the study",
-                        type = argparse.FileType("r"),
-                        default = None)
-    io_opts.add_argument("-r",
-                        "--ref_fasta",
-                        dest = "ref_fasta_f",
                         help = "Multi-FASTA file containing amino acid sequences for the reference strain",
                         type = argparse.FileType("r"),
                         default = None)
-    io_opts.add_argument("-c",
-                        "--counts",
-                        dest = "counts_f",
-                        help = "TSV file containing normalised gene expression values across strains. " +
-                        "Must not contain missing values",
-                        type = argparse.FileType("r"),
-                        default = None)
+    # io_opts.add_argument("-c",
+    #                     "--counts",
+    #                     dest = "counts_f",
+    #                     help = "TSV file containing normalised gene expression values across strains. " +
+    #                     "Must not contain missing values",
+    #                     type = argparse.FileType("r"),
+    #                     default = None)
     # io_opts.add_argument("--example_string",
     #                     dest = "example_string",
     #                     help = "String arg",
@@ -81,12 +74,11 @@ def BactVarMiner(args):
 
     print("Running SIFT")
 
-    run_sift(query = args.ref_fasta_f,
+    run_sift(fasta_file = args.ref_fasta_f,
         vars_file = args.vars_f,
-        ann_file = args.gff_f,
-        fasta_file = args.fasta_f,
-        counts_file = args.counts_f,
-        outdir = args.output_dir)
+        gff_file = args.gff_f,
+        # counts_file = args.counts_f,
+        out_dir = args.output_dir)
 
     return
 

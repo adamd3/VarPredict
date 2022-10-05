@@ -33,9 +33,8 @@ jobs:
         python --version
         pip install -U pip
         pip install -U pytest
-
-        # wget [test_data.zip]
-        # unzip [test_data.zip]
+        wget https://github.com/adamd3/BactVarMiner_test_data/archive/refs/tags/v1.0.0.zip -O BactVarMiner_test_data.zip
+        unzip BactVarMiner_test_data.zip
 
     - name: Install Python dependencies
       run:

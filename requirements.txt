@@ -1,3 +1,4 @@
+gffpandas
 numpy
 pandas
 pyfaidx

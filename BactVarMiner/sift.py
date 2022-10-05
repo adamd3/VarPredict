@@ -21,7 +21,7 @@ from pyfaidx import Fasta
 
 def get_db(
     db_name = 'uniref90', # name of the db (uniref90 / uniref100)
-    outdir = './'): # output directory for storing db
+    out_dir = './'): # output directory for storing db
     ftp_host='ftp.uniprot.org'
     if db_name=='uniref90':
         ftp_path='/pub/databases/uniprot/uniref/uniref90'
@@ -31,7 +31,7 @@ def get_db(
         filename='uniref100.fasta.gz'
     else:
         raise ValueError("`db_name` must be one of `uniref90` or `uniref100`")
-    outf=os.path.join(outdir, 'uniref_db.fasta.gz')
+    outf=os.path.join(out_dir, 'uniref_db.fasta.gz')
     ftp=ftplib.FTP(ftp_host)
     ftp.login()
     ftp.cwd(ftp_path)
@@ -48,11 +48,11 @@ def get_codon_pos(
         pos = int(row['pos'])
         gene = row['gene']
         ref_aa = row['ref']
-        if gene in cds_annot['Locus Tag'].tolist():
-            annot = (cds_annot[cds_annot['Locus Tag']==gene])
-            gene_start = int((cds_annot[cds_annot['Locus Tag']==gene])['Start'])
-            gene_stop = int((cds_annot[cds_annot['Locus Tag']==gene])['End'])
-            gene_strand = str(cds_annot.loc[cds_annot['Locus Tag'] == gene, 'Strand'].item())
+        if gene in cds_annot['locus_tag'].tolist():
+            annot = (cds_annot[cds_annot['locus_tag']==gene])
+            gene_start = int((cds_annot[cds_annot['locus_tag']==gene])['start'])
+            gene_stop = int((cds_annot[cds_annot['locus_tag']==gene])['end'])
+            gene_strand = str(cds_annot.loc[cds_annot['locus_tag'] == gene, 'strand'].item())
             gene_len = (gene_stop-gene_start)+1
             if gene in gene_seq.keys():
                 if gene_strand == "+":
@@ -90,22 +90,16 @@ def get_codon_pos(
 
 
 def make_sift_files(
-    vars_file, # file containing table of variants in protein-coding regions
-    ann_file, # genome annotation file
     fasta_file, # amino acid multi-fasta file
-    counts_file, # normalised read counts file
-    outdir): # output directory
+    vars_file, # file containing table of variants in protein-coding regions
+    gff_file, # genome annotation file
+    # counts_file, # normalised read counts file
+    out_dir): # output directory
 
     # read input
-    count_data = pd.read_csv(counts_file, sep = "\t")
     vars_data = pd.read_csv(vars_file, sep = "\t", low_memory=False)
-    annotation = pd.read_csv(ann_file, sep = "\t")
+    annotation = pd.read_csv(gff_file, sep = "\t")
     gene_seq = Fasta(fasta_file)
-
-    # subset to strains present in count data
-    strain_names = count_data.columns.values.tolist()
-    keep_cols = ['pos', 'ref'] + strain_names
-    vars_data = vars_data[keep_cols]
 
     # remove variants where all strains identical to ref:
     vars_data_alleles = vars_data[['ref'] + strain_names]
@@ -120,10 +114,9 @@ def make_sift_files(
     vars_data['gene'] = var_genes
 
     # prepare annotation data
-    annot_sub = annotation[['Locus Tag', 'Feature Type', 'Start', 'End', 'Strand', 'Gene Name']]
-    cds_annot = annot_sub[annot_sub['Feature Type']=='CDS']
-    vars_sub = vars_data.copy(deep=True)
+    cds_annot = gff_to_df(gff_file)
 
+    vars_sub = vars_data.copy(deep=True)
     vars_sub['codon_pos'] = get_codon_pos(vars_sub, cds_annot, gene_seq)
 
     ## remove variants where the given reference AA didn't match the sequence
@@ -154,7 +147,7 @@ def make_sift_files(
     for gene_name in strain_var_dict.keys():
         all_vars = list(chain.from_iterable(strain_var_dict[gene_name].values()))
         all_vars = list(set([x for xs in all_vars for x in xs]))
-        outfile = os.path.join(outdir, 'subst_files', gene_name+'.subst')
+        outfile = os.path.join(out_dir, 'subst_files', gene_name+'.subst')
         with open(outfile, 'a+') as f:
             for var in all_vars:
                 f.write("%s\n" % var)
@@ -163,24 +156,24 @@ def make_sift_files(
 
 
 
-def run_sift(query, vars_file, ann_file, fasta_file, counts_file, outdir):
+def run_sift(fasta_file, vars_file, gff_file, out_dir):
     # download UNIPROT db
-    get_db(outdir = outdir)
+    get_db(out_dir = out_dir)
 
     # make SIFT input files
     make_sift_files(
-        vars_file = vars_file,
-        ann_file = ann_file,
         fasta_file = fasta_file,
-        counts_file = counts_file,
-        outdir = outdir
+        vars_file = vars_file,
+        gff_file = gff_file,
+        # counts_file = counts_file,
+        out_dir = out_dir
     )
 
     cmd = "sift4g"
-    cmd += " --query " + query
-    cmd += " --subst " + os.path.join(outdir, 'subst_files')
-    cmd += " --database " + os.path.join(outdir, 'uniref_db.fasta.gz')
-    cmd += " --out " + os.path.join(outdir, 'sift_out')
+    cmd += " --query " + fasta_file
+    cmd += " --subst " + os.path.join(out_dir, 'subst_files')
+    cmd += " --database " + os.path.join(out_dir, 'uniref_db.fasta.gz')
+    cmd += " --out " + os.path.join(out_dir, 'sift_out')
     # default params (not currently modifiable):
     cmd += " --kmer-length " + "5"
     cmd += " --max-candidates " + "5000"
