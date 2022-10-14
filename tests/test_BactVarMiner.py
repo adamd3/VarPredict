@@ -1,7 +1,7 @@
 # Test pipeline
 import sys, os
 import tempfile
-from .BactVarMiner import main
+from BactVarMiner.BactVarMiner import main
 
 def test_pipeline(datafolder):
 
