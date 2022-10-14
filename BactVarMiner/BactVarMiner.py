@@ -75,7 +75,7 @@ def BactVarMiner(args):
 
     print("Running SIFT")
 
-    run_sift(fasta_file = args.ref_fasta_f,
+    run_sift(fasta_file = args.fasta_f,
         vars_file = args.vars_f,
         gff_file = args.gff_f,
         # counts_file = args.counts_f,
