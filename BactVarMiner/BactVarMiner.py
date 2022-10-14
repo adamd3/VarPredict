@@ -4,6 +4,7 @@ import os
 import argparse
 from .is_valid import *
 from .parse_gff import *
+from .sift import *
 
 from .__init__ import __version__
 
