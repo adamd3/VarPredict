@@ -15,7 +15,6 @@ from pyfaidx import Fasta
 
 
 ## TODO:
-##  - accept GFF format input (instead of / as well as) TSV
 ##  - rename column containing the reference aa as 'ref'
 
 
@@ -144,6 +143,7 @@ def make_sift_files(
                 (strain_var_dict[gene_name][strain]).append(vars_list)
 
     # save input files for SIFT
+    os.mkdir(os.path.join(out_dir, 'subst_files'))
     for gene_name in strain_var_dict.keys():
         all_vars = list(chain.from_iterable(strain_var_dict[gene_name].values()))
         all_vars = list(set([x for xs in all_vars for x in xs]))

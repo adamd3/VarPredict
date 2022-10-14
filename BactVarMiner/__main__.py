@@ -1,8 +1,7 @@
 import os, sys
 import argparse
 import textwrap
-
-## TODO: import other modules from the BactVarMiner here
+from .BactVarMiner import dbv_parser
 
 from .__init__ import __version__
 
@@ -11,6 +10,8 @@ class UltimateHelpFormatter(
     argparse.RawTextHelpFormatter, argparse.ArgumentDefaultsHelpFormatter):
     pass
 
+
+def get_options(args):
 
 
 def main():
