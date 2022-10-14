@@ -42,5 +42,5 @@ jobs:
         pip install -e . ## install BactVarMiner (+ dependencies)
 
     - name: Validation tests
-      run: pytest -W ignore -q --datafolder="${{ github.workspace }}/BactVarMiner_test_data-1.0.0/"
+      run: pytest -W ignore -q --data_dir="${{ github.workspace }}/BactVarMiner_test_data-1.0.0/"
         # By default pytest discovers tests in files named test_*.py or *_test.py
