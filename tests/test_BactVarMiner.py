@@ -7,9 +7,9 @@ def test_pipeline(data_dir):
 
     with tempfile.TemporaryDirectory() as tmpdirname:
 
-        vars_f = os.path.join(data_dir, 'sample2variant_coding.head.txt')
-        gff_f = os.path.join(data_dir, 'Pseudomonas_aeruginosa_PAO1.gff')
-        fasta_f = os.path.join(data_dir, 'Pseudomonas_aeruginosa_PAO1_107.faa')
+        vars_f = os.path.join(data_dir[0], 'sample2variant_coding.head.txt')
+        gff_f = os.path.join(data_dir[0], 'Pseudomonas_aeruginosa_PAO1.gff')
+        fasta_f = os.path.join(data_dir[0], 'Pseudomonas_aeruginosa_PAO1_107.faa')
 
         ## run pipeline
         sys.argv = [
