@@ -1,7 +1,11 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 
-import VarPredict.argP as argP
-import VarPredict.runVarPredict as runVarPredict
+try:
+    import VarPredict.argP as argP
+    import VarPredict.runVarPredict as runVarPredict
+except ImportError:
+    import argP
+    import runVarPredict
 
 
 def main():
