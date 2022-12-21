@@ -1,2 +1,2 @@
-# BactVarMiner
-A command line tool for annotating bacterial genetic variants.
+# VarPredict
+A command line tool for predicting gene expression using genotypic data.
