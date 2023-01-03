@@ -1,6 +1,4 @@
-gffpandas
+matplotlib
 numpy
 pandas
-pyfaidx
-pyftpdlib
-pytest
+sklearn
