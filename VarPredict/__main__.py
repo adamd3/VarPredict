@@ -17,29 +17,37 @@ def main():
     # main arguments
     main_parser.add_argument("--filter",
         dest = "filter",
-        help = "Filter gene expression data to remove genes with low variance",
+        help = "filter gene expression data to remove genes with low variance",
         action = "store_true",
         default = False
     )
     main_parser.add_argument(
         "--version", 
-        action="version", 
-        version="%(prog)s " + __version__
+        action = "version", 
+        version = "%(prog)s " + __version__
     )
 
-    # argument groups
-    io_opts = main_parser.add_argument_group("Input/output files")
-    other_opts = main_parser.add_argument_group("Other options")
+    # subparsers
+    subparsers = main_parser.add_subparsers(
+        dest = "model", help = "specify model type",
+        title = "available models"
+    )
 
-    # I/O options
-    io_opts.add("-o",
+    # parent subparser for shared args
+    # note `add_help=False` and creation via `argparse.`
+    # (see comment by Michael @ https://stackoverflow.com/questions/7498595/python-argparse-add-argument-to-multiple-subparsers)
+
+    parent_parser = argparse.ArgumentParser(add_help = False)
+
+    # input/output options
+    parent_parser.add_argument("-o",
         "--out_dir",
         dest = "output_dir",
         required = True,
         help = "Location of output directory, which should already exist",
         type = lambda x: is_valid_dir(main_parser, x)
     )
-    io_opts.add("-g",
+    parent_parser.add_argument("-g",
         "--genotypes",
         dest = "geno_f",
         required = True,
@@ -48,7 +56,7 @@ def main():
         type = argparse.FileType("r"),
         default = None
     )
-    io_opts.add("-c",
+    parent_parser.add_argument("-c",
         "--counts",
         dest = "counts_f",
         required = True,
@@ -56,7 +64,7 @@ def main():
         type = argparse.FileType("r"),
         default = None
     )
-    io_opts.add("-m",
+    parent_parser.add_argument("-m",
         "--metadata",
         dest = "meta_f",
         required = False,
@@ -65,15 +73,11 @@ def main():
         type = argparse.FileType("r"),
         default = None
     )
-
-    # subparsers
-    subparsers = main_parser.add_subparsers(
-        dest="command", 
-        title="Available commands"
-    )
+    
 
     rf_subparser = subparsers.add_parser(
-        "random-forest",
+        "random-forest", 
+        parents=[parent_parser], # if not specified, common options not used
         help="random forest model"
     )
     rf_subparser = rf_parser(rf_subparser)
@@ -83,6 +87,10 @@ def main():
     args.func(args)
 
     return
+
+    ## AD example usage:
+    ## VarPredict random-forest  -o [output] -g [genotypes] -c [counts] -m [metadata] \
+    ##  -d [5,10, None] -f ['sqrt', 'log2', None] -s [2, 4, 8] -e [300]
 
 
 if __name__ == "__main__":
