@@ -35,7 +35,7 @@ def main():
     )
 
     # input/output options
-    io_opts = parser.add_argument_group("Input/output options")
+    io_opts = main_parser.add_argument_group("Input/output options")
     io_opts.add_argument(
         "-o",
         "--out_dir",
