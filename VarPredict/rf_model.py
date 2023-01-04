@@ -196,8 +196,7 @@ def rf_imp_scores(feature_list, counts_t, vars_st, args):
     print("Generating Random Forest Gini Importance Scores for predictors")
 
     X = vars_st.values
-    cv_outer = StratifiedKFold(n_splits=5, shuffle=True)
-    cv_inner = StratifiedKFold(n_splits=3, shuffle=True)
+    cv_split = StratifiedKFold(n_splits=5, shuffle=True)
     model = RandomForestClassifier()
     grid = {
         'max_depth': args.max_depth, 
@@ -209,11 +208,10 @@ def rf_imp_scores(feature_list, counts_t, vars_st, args):
     imp_dict = {}
     for feat in feature_list:
         y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
-        model = RandomForestClassifier()
         try:
             search = GridSearchCV(
                 model, grid, scoring='balanced_accuracy', 
-                cv=cv_outer, refit=True
+                cv=cv_split, refit=True
             )
             result = search.fit(X, y)
             best_model = result.best_estimator_
