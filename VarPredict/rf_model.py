@@ -195,9 +195,19 @@ def rf_nested_cv(feature_list, counts_t, vars_st, args):
 def rf_imp_scores(feature_list, counts_t, vars_st, args):
     print("Generating Random Forest Gini Importance Scores for predictors")
 
+    X = vars_st.values
+    cv_outer = StratifiedKFold(n_splits=5, shuffle=True)
+    cv_inner = StratifiedKFold(n_splits=3, shuffle=True)
+    model = RandomForestClassifier()
+    grid = {
+        'max_depth': args.max_depth, 
+        'max_features': args.max_features,
+        'min_samples_split': args.min_samples_split,
+        'n_estimators': args.n_estimators
+    }
+
     imp_dict = {}
     for feat in feature_list:
-        X = vars_st.values
         y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
         model = RandomForestClassifier()
         try:
