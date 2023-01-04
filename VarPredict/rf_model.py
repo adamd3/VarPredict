@@ -138,18 +138,18 @@ def rf_model(args):
     vars_st = genotypes_t.merge(st_encod, left_index=True, right_index=True)
 
     # estimate model accuracy via nested CV
-    acc_df = rf_nested_cv(feature_list_sub, counts_t, vars_st)
+    acc_df = rf_nested_cv(feature_list_sub, counts_t, vars_st, args)
     outf1 = os.path.join(args.output_dir, 'acc_df_rf.txt')
     acc_df.to_csv(outf1, index=False, sep='\t')
 
     # get importance scores by model for predictors
-    imp_df_combined = rf_imp_scores(feature_list_sub, counts_t, vars_st)
+    imp_df_combined = rf_imp_scores(feature_list_sub, counts_t, vars_st, args)
     outf2 = os.path.join(args.output_dir, 'imp_df_rf.txt')
     imp_df_combined.to_csv(outf2, index=False, sep='\t')
 
     return
 
-def rf_nested_cv(feature_list, counts_t, vars_st):
+def rf_nested_cv(feature_list, counts_t, vars_st, args):
     print("Estimating Random Forest model accuracy via nested CV")
 
     X = vars_st.values
@@ -192,7 +192,7 @@ def rf_nested_cv(feature_list, counts_t, vars_st):
 
     return acc_df
 
-def rf_imp_scores(feature_list, counts_t, vars_st):
+def rf_imp_scores(feature_list, counts_t, vars_st, args):
     print("Generating Random Forest Gini Importance Scores for predictors")
 
     imp_dict = {}
