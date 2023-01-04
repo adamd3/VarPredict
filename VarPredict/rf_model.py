@@ -8,6 +8,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, KFold, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import balanced_accuracy_score
+from .is_valid import *
 
 
 from .__init__ import __version__
