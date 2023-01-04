@@ -27,7 +27,7 @@ setuptools.setup(
     url="https://github.com/adamd3/VarPredict",
     packages=['VarPredict'],
     python_requires='>=3.7.0',
-    install_requires=['matplotlib', 'numpy', 'pandas', 'sklearn'],
+    install_requires=['matplotlib', 'numpy', 'pandas', 'scikit-learn'],
     keywords='genetic variant expression machine learning model',
     classifiers=[
         'Programming Language :: Python :: 3',
