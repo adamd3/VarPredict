@@ -35,7 +35,7 @@ setuptools.setup(
         'Operating System :: OS Independent',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Bio-Informatics',
-    ]
+    ],
     entry_points={
         'console_scripts':
         ['VarPredict = VarPredict.__main__:main',],
