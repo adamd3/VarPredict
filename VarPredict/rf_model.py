@@ -19,7 +19,7 @@ def rf_parser(parser):
 
     # hyperparameter options
     hyper_opts = parser.add_argument_group("Hyperparameter options")
-    hyper_opts.add(
+    hyper_opts.add_argument(
             "-d",
             "--max_depth",
             dest = "max_depth",
@@ -27,7 +27,7 @@ def rf_parser(parser):
             default = [5,10, None],
             help = "The number of splits that each decision tree is allowed to make"
             )
-    hyper_opts.add(
+    hyper_opts.add_argument(
             "-f",
             "--max_features",
             dest = "max_features",
@@ -35,7 +35,7 @@ def rf_parser(parser):
             default = ['sqrt', 'log2', None],
             help = "The number of features to consider when looking for the best split"
             )
-    hyper_opts.add(
+    hyper_opts.add_argument(
             "-s",
             "--min_samples_split",
             dest = "min_samples_split",
@@ -43,7 +43,7 @@ def rf_parser(parser):
             default = [2, 4, 8],
             help = "The minimum number of samples required to split an internal node"
             )
-    hyper_opts.add(
+    hyper_opts.add_argument(
             "-e",
             "--n_estimators",
             dest = "n_estimators",
