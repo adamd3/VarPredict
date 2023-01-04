@@ -3,26 +3,25 @@ import sys, os
 import tempfile
 from VarPredict.VarPredict import main
 
-def test_pipeline(data_dir):
+def test_rf(data_dir):
 
     with tempfile.TemporaryDirectory() as tmpdirname:
 
-        vars_f = os.path.join(data_dir[0], 'sample2variant_coding.head.txt')
-        gff_f = os.path.join(data_dir[0], 'Pseudomonas_aeruginosa_PAO1.gff')
-        fasta_f = os.path.join(data_dir[0], 'Pseudomonas_aeruginosa_PAO1_107.faa')
+        geno_f = os.path.join(data_dir[0], 'gene_burden_scores.sub.txt')
+        counts_f = os.path.join(data_dir[0], 'counts_matrix.sub.txt')
+        meta_f = os.path.join(data_dir[0], 'metadata_merged.txt')
 
-        ## run pipeline
+        ## run random-forest modelling
         sys.argv = [
-            "run", 
+            "random-forest", 
             "-o", tmpdirname, 
-            "-v", vars_f, 
-            "-g", gff_f, 
-            "-f", fasta_f
+            "-g", geno_f, 
+            "-c", counts_f, 
+            "-m", meta_f
         ]
         main()
 
-        # check directory is present
-        outdir = os.path.join(tmpdirname, 'subst_files')
 
+        # TODO: check that output matches expectation
 
     return
