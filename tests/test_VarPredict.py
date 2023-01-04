@@ -1,7 +1,7 @@
 # Test pipeline
 import sys, os
 import tempfile
-from VarPredict.VarPredict import main
+from VarPredict.rf_model import main
 
 def test_rf(data_dir):
 
