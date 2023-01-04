@@ -17,6 +17,46 @@ def rf_parser(parser):
 
     parser.description = "Random Forest model"
 
+    # input/output options
+    io_opts = parser.add_argument_group("Input/output options")
+    io_opts.add_argument(
+        "-o",
+        "--out_dir",
+        dest = "output_dir",
+        required = True,
+        help = "Location of output directory, which should already exist",
+        type = lambda x: is_valid_dir(parser, x)
+    )
+    io_opts.add_argument(
+        "-g",
+        "--genotypes",
+        dest = "geno_f",
+        required = True,
+        help = "TSV file containing genotypes across strains (can be " +
+        "integers or continuous values)",
+        type = argparse.FileType("r"),
+        default = None
+    )
+    io_opts.add_argument(
+        "-c",
+        "--counts",
+        dest = "counts_f",
+        required = True,
+        help = "TSV file containing normalised expression values per feature",
+        type = argparse.FileType("r"),
+        default = None
+    )
+    io_opts.add_argument(
+        "-m",
+        "--metadata",
+        dest = "meta_f",
+        required = False,
+        help = "TSV file containing metadata for samples. Columns contain " + 
+        "model covariates.",
+        type = argparse.FileType("r"),
+        default = None
+    )
+    
     # hyperparameter options
     hyper_opts = parser.add_argument_group("Hyperparameter options")
     hyper_opts.add_argument(
