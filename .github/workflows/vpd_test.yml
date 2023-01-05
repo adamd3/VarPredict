@@ -33,7 +33,7 @@ jobs:
         python --version
         pip install -U pip
         pip install -U pytest
-        wget https://github.com/adamd3/VarPredict_test_data/archive/refs/tags/v1.0.0.zip -O VarPredict_test_data.zip
+        wget https://github.com/adamd3/VarPredict_test_data/archive/refs/tags/v2.0.0.zip -O VarPredict_test_data.zip
         unzip VarPredict_test_data.zip
 
     - name: Install Python dependencies
@@ -42,5 +42,5 @@ jobs:
         pip install -e . ## install VarPredict (+ dependencies)
 
     - name: Validation tests
-      run: pytest -W ignore -q --data_dir="${{ github.workspace }}/VarPredict_test_data-1.0.0/"
+      run: pytest -W ignore -q --data_dir="${{ github.workspace }}/VarPredict_test_data-2.0.0/"
         # By default pytest discovers tests in files named test_*.py or *_test.py
