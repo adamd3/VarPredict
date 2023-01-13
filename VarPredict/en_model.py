@@ -1,22 +1,21 @@
-# Random Forest model
+# Elastic Net-penalised Logistic Regression model
 
 import os
 import argparse
 import pandas as pd
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score, KFold, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import balanced_accuracy_score
 from .is_valid import *
 
-
 from .__init__ import __version__
 
 
-def rf_parser(parser):
+def en_parser(parser):
 
-    parser.description = "Random Forest model"
+    parser.description = "Elastic Net-penalised Logistic Regression model"
 
     # input/output options
     io_opts = parser.add_argument_group("Input/output options")
@@ -61,45 +60,29 @@ def rf_parser(parser):
     # hyperparameter options
     hyper_opts = parser.add_argument_group("Hyperparameter options")
     hyper_opts.add_argument(
-            "-d",
-            "--max_depth",
-            dest = "max_depth",
+            "-v",
+            "--c_vals",
+            dest = "c_vals",
             nargs = '+',
-            default = [5,10, None],
-            help = "The number of splits that each decision tree is allowed to make"
+            default = list(np.power(10.0, np.arange(-2, 2))),
+            help = "C values to try for cross-validation. Note: smaller C = stronger penalisation."
             )
     hyper_opts.add_argument(
-            "-f",
-            "--max_features",
-            dest = "max_features",
+            "-l",
+            "--l1_ratio",
+            dest = "l1_ratio",
             nargs = '+',
-            default = ['sqrt', 'log2', None],
-            help = "The number of features to consider when looking for the best split"
-            )
-    hyper_opts.add_argument(
-            "-s",
-            "--min_samples_split",
-            dest = "min_samples_split",
-            nargs = '+',
-            default = [2, 4, 8],
-            help = "The minimum number of samples required to split an internal node"
-            )
-    hyper_opts.add_argument(
-            "-e",
-            "--n_estimators",
-            dest = "n_estimators",
-            nargs = '+',
-            default = [300],
-            help = "The number of trees in the forest"
+            default = np.arange(0, 1.10, 0.1),
+            help = "l1 ratios to try for cross-validation. Note: l1 penalty = lasso; l2 penalty = ridge"
             )
 
     # add functions to be run (these will be called in `main()`)
-    parser.set_defaults(func = rf_model)
+    parser.set_defaults(func = en_model)
 
     return parser
 
-def rf_model(args):
-    print("Running Random Forest modelling")
+def en_model(args):
+    print("Running Elastic Net-penalised Logistic Regression modelling")
 
     # read input files
     genotypes_data = pd.read_csv(args.geno_f, sep = "\t")
@@ -138,29 +121,31 @@ def rf_model(args):
     vars_st = genotypes_t.merge(st_encod, left_index=True, right_index=True)
 
     # estimate model accuracy via nested CV
-    acc_df = rf_nested_cv(feature_list_sub, counts_t, vars_st, args)
+    acc_df = en_nested_cv(feature_list_sub, counts_t, vars_st, args)
     outf1 = os.path.join(args.output_dir, 'acc_df_rf.txt')
     acc_df.to_csv(outf1, index=False, sep='\t')
 
-    # get importance scores by model for predictors
-    imp_df_combined = rf_imp_scores(feature_list_sub, counts_t, vars_st, args)
-    outf2 = os.path.join(args.output_dir, 'imp_df_rf.txt')
-    imp_df_combined.to_csv(outf2, index=False, sep='\t')
+    # get coefficients by model for predictors
+    coef_df_combined = en_coefs(feature_list_sub, counts_t, vars_st, args)
+    outf2 = os.path.join(args.output_dir, 'coef_df_en.txt')
+    coef_df_combined.to_csv(outf2, index=False, sep='\t')
 
     return
 
-def rf_nested_cv(feature_list, counts_t, vars_st, args):
-    print("Estimating Random Forest model accuracy via nested CV")
+def en_nested_cv(feature_list, counts_t, vars_st, args):
+    print("Estimating Elastic Net-penalised Logistic Regression model accuracy via nested CV")
 
     X = vars_st.values
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)  
+
     cv_outer = StratifiedKFold(n_splits=5, shuffle=True)
     cv_inner = StratifiedKFold(n_splits=3, shuffle=True)
-    model = RandomForestClassifier()
+    model = LogisticRegression(penalty = 'elasticnet', solver = 'saga')
+
     grid = {
-        'max_depth': args.max_depth, 
-        'max_features': args.max_features,
-        'min_samples_split': args.min_samples_split,
-        'n_estimators': args.n_estimators
+        'C': args.c_vals, 
+        'l1_ratio': args.l1_ratios
     }
 
     # get mean model accuracies from nested CV
@@ -192,54 +177,56 @@ def rf_nested_cv(feature_list, counts_t, vars_st, args):
 
     return acc_df
 
-def rf_imp_scores(feature_list, counts_t, vars_st, args):
-    print("Generating Random Forest Gini Importance Scores for predictors")
+def en_coefs(feature_list, counts_t, vars_st, args):
+    print("Generating Elastic Net-penalised Logistic Regression coefficients for predictors")
 
     X = vars_st.values
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)  
+
     cv_split = StratifiedKFold(n_splits=5, shuffle=True)
-    model = RandomForestClassifier()
+    model = LogisticRegression(penalty = 'elasticnet', solver = 'saga')
+
     grid = {
-        'max_depth': args.max_depth, 
-        'max_features': args.max_features,
-        'min_samples_split': args.min_samples_split,
-        'n_estimators': args.n_estimators
+        'C': args.c_vals, 
+        'l1_ratio': args.l1_ratios
     }
 
-    imp_dict = {}
+    coefs_dict = {}
     for feat in feature_list:
+        y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
         try:
-            y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
                 model, grid, scoring='balanced_accuracy', 
                 cv=cv_split, refit=True
             )
             result = search.fit(X, y)
             best_model = result.best_estimator_
-            imp_df = pd.DataFrame((best_model.feature_importances_).transpose())
-            imp_df['var'] = vars_st.columns
-            imp_df = imp_df.rename(columns={0: 'importance'})
-            imp_df = imp_df.sort_values('importance', ascending=False)
-            imp_df = imp_df.reset_index(drop=True)
-            imp_df['feat'] = feat 
-            imp_df = imp_df[imp_df['importance']>0]
-            imp_dict[feat] = imp_df
+            coefs_df = pd.DataFrame((best_model.coef_).transpose())
+            coefs_df['var'] = vars_st.columns
+            coefs_df = coefs_df.rename(columns={0: 'coef'})
+            coefs_df = coefs_df.sort_values('coef', ascending=False)
+            coefs_df = coefs_df.reset_index(drop=True)
+            coefs_df['feat'] = feat 
+            coefs_df = coefs_df[coefs_df['coef']!=0]
+            coefs_dict[feat] = coefs_df
         except ValueError:
-            imp_dict[feat] = np.nan
+            coefs_dict[feat] = np.nan
 
     # remove nans + combine dfs
     df_names = []
-    for i in imp_dict.keys():
-        vali = imp_dict[i]
+    for i in coefs_dict.keys():
+        vali = coefs_dict[i]
         if isinstance(vali, pd.DataFrame):
-            df_names.append(imp_dict[i])
-    imp_df_combined = pd.concat(df_names)
+            df_names.append(coefs_dict[i])
+    coefs_df_combined = pd.concat(df_names)
 
-    return imp_df_combined
+    return coefs_df_combined
 
 def main():
     # set up and parse arguments
     parser = argparse.ArgumentParser()
-    parser = rf_parser(parser)
+    parser = en_parser(parser)
     args = parser.parse_args()
 
     # AD: the value for `func` is defined above in parser

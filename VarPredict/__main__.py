@@ -48,6 +48,15 @@ def main():
     )
     rf_subparser = rf_parser(rf_subparser)
 
+    en_subparser = subparsers.add_parser(
+        "elastic-net", 
+        parents = [main_parser], # if not specified, common options not used
+        help = "elastic net-regularised logistic regression model", 
+        add_help = False
+    )
+    en_subparser = en_parser(en_subparser)
+
+
     # parse arguments and run function
     args = main_parser.parse_args()
     args.func(args)

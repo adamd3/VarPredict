@@ -21,6 +21,15 @@ def test_rf(data_dir):
         ]
         main()
 
+        ## run elastic net-penalised logistic regression modelling
+        sys.argv = [
+            "elastic-net", 
+            "-o", tmpdirname, 
+            "-g", geno_f, 
+            "-c", counts_f, 
+            "-m", meta_f
+        ]
+        main()
 
         # TODO: check that output matches expectation
 
