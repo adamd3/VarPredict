@@ -11,11 +11,14 @@ Files required:
 
 ## Usage
 Basic usage is as follows:
-    VarPredict [model] \
-        -o output_directory \
-        -g genotypes_file \
-        -c gene_expression_file \
-        -m metadata_file 
+
+```
+VarPredict [model] \
+    -o output_directory \
+    -g genotypes_file \
+    -c gene_expression_file \
+    -m metadata_file 
+```
 
 Available models: `random-forest`, `elastic-net`.
 
