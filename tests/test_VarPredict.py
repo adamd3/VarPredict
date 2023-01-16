@@ -2,6 +2,7 @@
 import sys, os
 import tempfile
 from VarPredict.rf_model import main
+from VarPredict.en_model import main
 
 def test_rf(data_dir):
 
