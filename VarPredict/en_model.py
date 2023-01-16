@@ -69,8 +69,8 @@ def en_parser(parser):
             )
     hyper_opts.add_argument(
             "-l",
-            "--l1_ratio",
-            dest = "l1_ratio",
+            "--l1_ratios",
+            dest = "l1_ratios",
             nargs = '+',
             default = np.arange(0, 1.10, 0.1),
             help = "l1 ratios to try for cross-validation. Note: l1 penalty = lasso; l2 penalty = ridge"
