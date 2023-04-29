@@ -2,8 +2,8 @@
 
 import sys, os
 import tempfile
-from VarPredict.rf_model import main
-from VarPredict.en_model import main
+from VarPredict.rf_model import main as rf_main
+from VarPredict.en_model import main as en_main
 
 def test_rf(data_dir):
 
@@ -20,7 +20,7 @@ def test_rf(data_dir):
             '-c', counts_f, 
             '-m', meta_f
         ]
-        main()
+        rf_main()
 
         assert os.path.isfile(tmpdirname + 'acc_df_rf.txt')
         assert os.path.isfile(tmpdirname + 'imp_df_rf.txt')
@@ -43,7 +43,7 @@ def test_en(data_dir):
             '-c', counts_f, 
             '-m', meta_f
         ]
-        main()
+        en_main()
 
         assert os.path.isfile(tmpdirname + 'acc_df_en.txt')
         assert os.path.isfile(tmpdirname + 'coef_df_en.txt')
