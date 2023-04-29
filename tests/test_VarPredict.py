@@ -1,4 +1,5 @@
 # Test pipeline
+
 import sys, os
 import tempfile
 from VarPredict.rf_model import main
@@ -32,6 +33,9 @@ def test_rf(data_dir):
         ]
         main()
 
-        # TODO: check that output matches expectation
+
+        # check files are present
+        assert os.path.isfile(tmpdirname + "DBS_label_A.csv")
+        assert os.path.isfile(tmpdirname + "DBS_label_A.pdf")
 
     return

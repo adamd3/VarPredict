@@ -1,9 +1,9 @@
 # Elastic Net-penalised Logistic Regression model
 
-import os
 import argparse
-import pandas as pd
 import numpy as np
+import os
+import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (
     cross_val_score,
@@ -15,7 +15,6 @@ from sklearn.model_selection import (
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import balanced_accuracy_score
 from .is_valid import *
-
 from .__init__ import __version__
 
 

@@ -1,5 +1,5 @@
-import os, sys
 import argparse
+import os, sys
 from .__init__ import __version__
 from .rf_model import rf_parser
 from .en_model import en_parser
@@ -10,9 +10,6 @@ class UltimateHelpFormatter(
 
 
 def main():
-
-    # parent subparser for shared args
-    # (see https://stackoverflow.com/questions/7498595/python-argparse-add-argument-to-multiple-subparsers)
 
     main_parser = argparse.ArgumentParser(formatter_class=UltimateHelpFormatter)
 
