@@ -3,44 +3,45 @@ name: VarPredict-CI
 on:
   push:
     branches:
-    - main
+      - main
   pull_request:
     branches:
-    - main
+      - main
   schedule:
-    - cron:  '1 1 1 * *'
+    - cron: '1 1 1 * *'
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [3.7, 3.8, 3.9]
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install Ubuntu dependencies
-      run: |
-        sudo apt-get update
-        # sudo apt-get install
-        python --version
-        pip install -U pip
-        pip install -U pytest
-        wget https://github.com/adamd3/VarPredict_test_data/archive/refs/tags/v2.0.0.zip -O VarPredict_test_data.zip
-        unzip VarPredict_test_data.zip
+      - name: Install Ubuntu dependencies
+        run: |
+          sudo apt-get update
+          sudo apt install libxkbcommon-x11-0
+          sudo apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+          export QT_DEBUG_PLUGINS=1
+          python --version
+          pip install -U pip
+          pip install -U pytest
+          wget https://github.com/adamd3/VarPredict_test_data/archive/refs/tags/v2.0.0.zip -O VarPredict_test_data.zip
+          unzip VarPredict_test_data.zip
 
-    - name: Install Python dependencies
-      run:
-        pip install -r requirements.txt
-        pip install -e . ## install VarPredict (+ dependencies)
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+          pip install -e . ## install VarPredict (+ dependencies)
 
-    - name: Validation tests
-      run: pytest -W ignore -q --data_dir="${{ github.workspace }}/VarPredict_test_data-2.0.0/"
-        # By default pytest discovers tests in files named test_*.py or *_test.py
+      - name: Validation tests
+        run:
+          pytest -W ignore -q --data_dir="${{ github.workspace }}/VarPredict_test_data-2.0.0/"
+          # By default pytest discovers tests in files named test_*.py or *_test.py
