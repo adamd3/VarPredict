@@ -13,7 +13,6 @@ def test_rf(data_dir):
         counts_f = os.path.join(data_dir[0], 'counts_matrix.sub.txt')
         meta_f = os.path.join(data_dir[0], 'metadata_merged.txt')
 
-        ## run random-forest modelling
         sys.argv = [
             'random-forest', 
             '-o', tmpdirname, 
@@ -23,7 +22,6 @@ def test_rf(data_dir):
         ]
         main()
 
-        # check files are present
         assert os.path.isfile(tmpdirname + 'acc_df_rf.txt')
         assert os.path.isfile(tmpdirname + 'imp_df_rf.txt')
 
@@ -38,7 +36,6 @@ def test_en(data_dir):
         counts_f = os.path.join(data_dir[0], 'counts_matrix.sub.txt')
         meta_f = os.path.join(data_dir[0], 'metadata_merged.txt')
 
-        ## run elastic net-penalised logistic regression modelling
         sys.argv = [
             'elastic-net', 
             '-o', tmpdirname, 
@@ -48,7 +45,6 @@ def test_en(data_dir):
         ]
         main()
 
-        # check files are present
         assert os.path.isfile(tmpdirname + 'acc_df_en.txt')
         assert os.path.isfile(tmpdirname + 'coef_df_en.txt')
 
