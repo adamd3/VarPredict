@@ -122,7 +122,7 @@ def en_model(args):
     vars_st = genotypes_t.merge(st_encod, left_index=True, right_index=True)
 
     acc_df = en_nested_cv(feature_list_sub, counts_t, vars_st, args)
-    outf1 = os.path.join(args.output_dir, 'acc_df_rf.txt')
+    outf1 = os.path.join(args.output_dir, 'acc_df_en.txt')
     acc_df.to_csv(outf1, index=False, sep='\t')
 
     coef_df_combined = en_coefs(feature_list_sub, counts_t, vars_st, args)

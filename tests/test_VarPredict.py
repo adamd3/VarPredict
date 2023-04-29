@@ -15,27 +15,42 @@ def test_rf(data_dir):
 
         ## run random-forest modelling
         sys.argv = [
-            "random-forest", 
-            "-o", tmpdirname, 
-            "-g", geno_f, 
-            "-c", counts_f, 
-            "-m", meta_f
+            'random-forest', 
+            '-o', tmpdirname, 
+            '-g', geno_f, 
+            '-c', counts_f, 
+            '-m', meta_f
         ]
         main()
+
+        # check files are present
+        assert os.path.isfile(tmpdirname + 'acc_df_rf.txt')
+        assert os.path.isfile(tmpdirname + 'imp_df_rf.txt')
+
+    return
+
+
+def test_en(data_dir):
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+
+        geno_f = os.path.join(data_dir[0], 'gene_burden_scores.sub.txt')
+        counts_f = os.path.join(data_dir[0], 'counts_matrix.sub.txt')
+        meta_f = os.path.join(data_dir[0], 'metadata_merged.txt')
 
         ## run elastic net-penalised logistic regression modelling
         sys.argv = [
-            "elastic-net", 
-            "-o", tmpdirname, 
-            "-g", geno_f, 
-            "-c", counts_f, 
-            "-m", meta_f
+            'elastic-net', 
+            '-o', tmpdirname, 
+            '-g', geno_f, 
+            '-c', counts_f, 
+            '-m', meta_f
         ]
         main()
 
-
         # check files are present
-        assert os.path.isfile(tmpdirname + "DBS_label_A.csv")
-        assert os.path.isfile(tmpdirname + "DBS_label_A.pdf")
+        assert os.path.isfile(tmpdirname + 'acc_df_en.txt')
+        assert os.path.isfile(tmpdirname + 'coef_df_en.txt')
 
     return
+
