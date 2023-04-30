@@ -1,6 +1,7 @@
 # Test pipeline
 
-import sys, os
+import os
+import sys
 import tempfile
 from VarPredict.rf_model import main as rf_main
 from VarPredict.en_model import main as en_main
@@ -22,8 +23,11 @@ def test_rf(data_dir):
         ]
         rf_main()
 
-        assert os.path.isfile(tmpdirname + 'acc_df_rf.txt')
-        assert os.path.isfile(tmpdirname + 'imp_df_rf.txt')
+        outf1 = os.path.join(tmpdirname, 'acc_df_rf.txt')
+        outf2 = os.path.join(tmpdirname, 'imp_df_rf.txt')
+
+        assert os.path.isfile(outf1)
+        assert os.path.isfile(outf2)
 
     return
 
@@ -45,8 +49,11 @@ def test_en(data_dir):
         ]
         en_main()
 
-        assert os.path.isfile(tmpdirname + 'acc_df_en.txt')
-        assert os.path.isfile(tmpdirname + 'coef_df_en.txt')
+        outf1 = os.path.join(tmpdirname, 'acc_df_en.txt')
+        outf2 = os.path.join(tmpdirname, 'coef_df_en.txt')
+
+        assert os.path.isfile(outf1)
+        assert os.path.isfile(outf2)
 
     return
 
