@@ -4,16 +4,15 @@ import argparse
 import numpy as np
 import os
 import pandas as pd
+from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (
     cross_val_score,
     GridSearchCV,
-    KFold,
-    StratifiedKFold,
-    train_test_split,
+    StratifiedKFold
 )
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import balanced_accuracy_score
 from .is_valid import *
 from .__init__ import __version__
 
@@ -65,23 +64,23 @@ def en_parser(parser):
     # hyperparameter options
     hyper_opts = parser.add_argument_group('Hyperparameter options')
     hyper_opts.add_argument(
-            '-v',
-            '--c_vals',
-            dest = 'c_vals',
-            nargs = '+',
-            default = list(np.power(10.0, np.arange(-2, 2))),
-            help = 'C values to try for cross-validation. Note: smaller ' +
-                'C = stronger penalisation.'
-            )
+        '-v',
+        '--c_vals',
+        dest = 'c_vals',
+        nargs = '+',
+        default = list(np.power(10.0, np.arange(-2, 2))),
+        help = 'C values to try for cross-validation. Note: smaller ' +
+            'C = stronger penalisation.'
+    )
     hyper_opts.add_argument(
-            '-l',
-            '--l1_ratios',
-            dest = 'l1_ratios',
-            nargs = '+',
-            default = np.arange(0, 1.10, 0.1),
-            help = 'l1 ratios to try for cross-validation. Note: l1 penalty ' +
-                '= lasso; l2 penalty = ridge'
-            )
+        '-l',
+        '--l1_ratios',
+        dest = 'l1_ratios',
+        nargs = '+',
+        default = np.arange(0, 1.10, 0.1),
+        help = 'l1 ratios to try for cross-validation. Note: l1 penalty ' +
+            '= lasso; l2 penalty = ridge'
+    )
 
     parser.set_defaults(func = en_model)
 
@@ -121,29 +120,39 @@ def en_model(args):
 
     vars_st = genotypes_t.merge(st_encod, left_index=True, right_index=True)
 
-    acc_df = en_nested_cv(feature_list_sub, counts_t, vars_st, args)
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ('numerical', StandardScaler(), slice(0, -1))  
+        ])
+
+    pipeline = Pipeline([
+        ('preprocessor', preprocessor),
+        ('model', LogisticRegression(penalty='elasticnet', solver='saga'))
+    ])
+
+    acc_df = en_nested_cv(
+        feature_list_sub, counts_t, vars_st, args, pipeline)
     outf1 = os.path.join(args.output_dir, 'acc_df_en.txt')
     acc_df.to_csv(outf1, index=False, sep='\t')
 
-    coef_df_combined = en_coefs(feature_list_sub, counts_t, vars_st, args)
+    coef_df_combined = en_coefs(
+        feature_list_sub, counts_t, vars_st, args, pipeline)
     outf2 = os.path.join(args.output_dir, 'coef_df_en.txt')
     coef_df_combined.to_csv(outf2, index=False, sep='\t')
 
     return
 
-def en_nested_cv(feature_list, counts_t, vars_st, args):
-
+def en_nested_cv(feature_list, counts_t, vars_st, args, pipeline):
     X = vars_st.values
     scaler = StandardScaler()
     X = scaler.fit_transform(X)  
 
     cv_outer = StratifiedKFold(n_splits=5, shuffle=True)
     cv_inner = StratifiedKFold(n_splits=3, shuffle=True)
-    model = LogisticRegression(penalty = 'elasticnet', solver = 'saga')
 
     grid = {
-        'C': args.c_vals, 
-        'l1_ratio': args.l1_ratios
+        'model__C': args.c_vals,
+        'model__l1_ratio': args.l1_ratios
     }
 
     mean_outer_accs={}
@@ -151,7 +160,7 @@ def en_nested_cv(feature_list, counts_t, vars_st, args):
         try:
             y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
-                model, grid, scoring='balanced_accuracy', cv=cv_inner, 
+                pipeline, grid, scoring='balanced_accuracy', cv=cv_inner, 
                 refit=True, n_jobs=-1
             )
             scores = cross_val_score(
@@ -173,14 +182,14 @@ def en_nested_cv(feature_list, counts_t, vars_st, args):
 
     return acc_df
 
-def en_coefs(feature_list, counts_t, vars_st, args):
+def en_coefs(feature_list, counts_t, vars_st, args, pipeline):
 
     X = vars_st.values
     scaler = StandardScaler()
     X = scaler.fit_transform(X)  
 
     cv_split = StratifiedKFold(n_splits=5, shuffle=True)
-    model = LogisticRegression(penalty = 'elasticnet', solver = 'saga')
+    # model = LogisticRegression(penalty = 'elasticnet', solver = 'saga')
 
     grid = {
         'C': args.c_vals, 
@@ -192,7 +201,7 @@ def en_coefs(feature_list, counts_t, vars_st, args):
         y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
         try:
             search = GridSearchCV(
-                model, grid, scoring='balanced_accuracy', 
+                pipeline, grid, scoring='balanced_accuracy', 
                 cv=cv_split, refit=True
             )
             result = search.fit(X, y)

@@ -8,12 +8,9 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import (
     cross_val_score, 
     GridSearchCV,
-    KFold,
-    StratifiedKFold,
-    train_test_split,  
+    StratifiedKFold
 )
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import balanced_accuracy_score
+from sklearn.pipeline import Pipeline
 from .is_valid import *
 from .__init__ import __version__
 
@@ -65,40 +62,40 @@ def rf_parser(parser):
     # hyperparameter options
     hyper_opts = parser.add_argument_group('Hyperparameter options')
     hyper_opts.add_argument(
-            '-d',
-            '--max_depth',
-            dest = 'max_depth',
-            nargs = '+',
-            default = [5,10, None],
-            help = 'The number of splits that each decision tree is allowed ' +
-                'to make'
-            )
+        '-d',
+        '--max_depth',
+        dest = 'max_depth',
+        nargs = '+',
+        default = [5,10, None],
+        help = 'The number of splits that each decision tree is allowed ' +
+            'to make'
+    )
     hyper_opts.add_argument(
-            '-f',
-            '--max_features',
-            dest = 'max_features',
-            nargs = '+',
-            default = ['sqrt', 'log2', None],
-            help = 'The number of features to consider when looking for the' + 
-                'best split'
-            )
+        '-f',
+        '--max_features',
+        dest = 'max_features',
+        nargs = '+',
+        default = ['sqrt', 'log2', None],
+        help = 'The number of features to consider when looking for the' + 
+            'best split'
+    )
     hyper_opts.add_argument(
-            '-s',
-            '--min_samples_split',
-            dest = 'min_samples_split',
-            nargs = '+',
-            default = [2, 4, 8],
-            help = 'The minimum number of samples required to split an ' +
-                'internal node'
-            )
+        '-s',
+        '--min_samples_split',
+        dest = 'min_samples_split',
+        nargs = '+',
+        default = [2, 4, 8],
+        help = 'The minimum number of samples required to split an ' +
+            'internal node'
+    )
     hyper_opts.add_argument(
-            '-e',
-            '--n_estimators',
-            dest = 'n_estimators',
-            nargs = '+',
-            default = [300],
-            help = 'The number of trees in the forest'
-            )
+        '-e',
+        '--n_estimators',
+        dest = 'n_estimators',
+        nargs = '+',
+        default = [300],
+        help = 'The number of trees in the forest'
+    )
 
     parser.set_defaults(func = rf_model)
 
@@ -138,23 +135,32 @@ def rf_model(args):
 
     vars_st = genotypes_t.merge(st_encod, left_index=True, right_index=True)
 
-    acc_df = rf_nested_cv(feature_list_sub, counts_t, vars_st, args)
+    pipeline = Pipeline([
+        ('classification', RandomForestClassifier())
+    ])
+
+    acc_df = rf_nested_cv(
+        feature_list_sub, counts_t, vars_st, args, pipeline)
     outf1 = os.path.join(args.output_dir, 'acc_df_rf.txt')
     acc_df.to_csv(outf1, index=False, sep='\t')
 
-    imp_df_combined = rf_imp_scores(feature_list_sub, counts_t, vars_st, args)
+    imp_df_combined = rf_imp_scores(
+        feature_list_sub, counts_t, vars_st, args, pipeline)
     outf2 = os.path.join(args.output_dir, 'imp_df_rf.txt')
     imp_df_combined.to_csv(outf2, index=False, sep='\t')
 
+
+
     return
 
-def rf_nested_cv(feature_list, counts_t, vars_st, args):
+def rf_nested_cv(feature_list, counts_t, vars_st, args, pipeline):
     print('Estimating Random Forest model accuracy via nested CV')
 
     X = vars_st.values
+
     cv_outer = StratifiedKFold(n_splits=5, shuffle=True)
     cv_inner = StratifiedKFold(n_splits=3, shuffle=True)
-    model = RandomForestClassifier()
+    # model = RandomForestClassifier()
     grid = {
         'max_depth': args.max_depth, 
         'max_features': args.max_features,
@@ -167,7 +173,7 @@ def rf_nested_cv(feature_list, counts_t, vars_st, args):
         try:
             y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
-                model, grid, scoring='balanced_accuracy', cv=cv_inner, 
+                pipeline, grid, scoring='balanced_accuracy', cv=cv_inner, 
                 refit=True, n_jobs=-1
             )
             scores = cross_val_score(
@@ -189,12 +195,12 @@ def rf_nested_cv(feature_list, counts_t, vars_st, args):
 
     return acc_df
 
-def rf_imp_scores(feature_list, counts_t, vars_st, args):
+def rf_imp_scores(feature_list, counts_t, vars_st, args, pipeline):
     print('Generating Random Forest Gini Importance Scores for predictors')
 
     X = vars_st.values
     cv_split = StratifiedKFold(n_splits=5, shuffle=True)
-    model = RandomForestClassifier()
+    # model = RandomForestClassifier()
     grid = {
         'max_depth': args.max_depth, 
         'max_features': args.max_features,
@@ -207,7 +213,7 @@ def rf_imp_scores(feature_list, counts_t, vars_st, args):
         try:
             y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
-                model, grid, scoring='balanced_accuracy', 
+                pipeline, grid, scoring='balanced_accuracy', 
                 cv=cv_split, refit=True
             )
             result = search.fit(X, y)
