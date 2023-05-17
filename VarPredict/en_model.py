@@ -12,7 +12,6 @@ from sklearn.model_selection import (
     StratifiedKFold
 )
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import balanced_accuracy_score
 from .is_valid import *
 from .__init__ import __version__
 
@@ -64,7 +63,7 @@ def en_parser(parser):
     # hyperparameter options
     hyper_opts = parser.add_argument_group('Hyperparameter options')
     hyper_opts.add_argument(
-        '-v',
+        '-p',
         '--c_vals',
         dest = 'c_vals',
         nargs = '+',

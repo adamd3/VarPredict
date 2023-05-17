@@ -71,7 +71,7 @@ def rf_parser(parser):
             'to make'
     )
     hyper_opts.add_argument(
-        '-f',
+        '-x',
         '--max_features',
         dest = 'max_features',
         nargs = '+',

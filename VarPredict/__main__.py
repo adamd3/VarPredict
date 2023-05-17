@@ -3,6 +3,7 @@ from .__init__ import __version__
 from .en_model import en_parser
 from .rf_model import rf_parser
 
+
 class UltimateHelpFormatter(
     argparse.RawTextHelpFormatter, argparse.ArgumentDefaultsHelpFormatter):
     pass
@@ -30,7 +31,7 @@ def main():
     # subparsers for ML models
     subparsers = main_parser.add_subparsers(
         dest = "model", help = "specify model type",
-        title = "available models", required = True
+        title = "available models"
     )
 
     rf_subparser = subparsers.add_parser(
