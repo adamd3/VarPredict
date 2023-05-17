@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import os
 import pandas as pd
+import pickle
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (
     cross_val_score,
@@ -186,6 +187,7 @@ def en_coefs(feature_list, counts_t, vars_st, args):
     }
 
     coefs_dict = {}
+    best_models = {}
     for feat in feature_list:
         y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
         try:
@@ -195,6 +197,7 @@ def en_coefs(feature_list, counts_t, vars_st, args):
             )
             result = search.fit(X, y)
             best_model = result.best_estimator_
+            best_models[feat] = best_model
             coefs_df = pd.DataFrame((best_model.coef_).transpose())
             coefs_df['var'] = vars_st.columns
             coefs_df = coefs_df.rename(columns={0: 'coef'})
@@ -205,6 +208,10 @@ def en_coefs(feature_list, counts_t, vars_st, args):
             coefs_dict[feat] = coefs_df
         except ValueError:
             coefs_dict[feat] = np.nan
+
+    outf3 = os.path.join(args.output_dir, 'best_models_en.pkl')
+    with open(outf3, 'wb') as file:
+        pickle.dump(best_models, file)
 
     df_names = []
     for i in coefs_dict.keys():

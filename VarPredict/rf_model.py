@@ -4,6 +4,7 @@ import argparse
 import numpy as np
 import os
 import pandas as pd
+import pickle
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import (
     cross_val_score, 
@@ -158,7 +159,7 @@ def rf_nested_cv(feature_list, counts_t, vars_st, args):
         'n_estimators': args.n_estimators
     }
 
-    mean_outer_accs={}
+    mean_outer_accs = {}
     for feat in feature_list:
         try:
             y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
@@ -173,9 +174,10 @@ def rf_nested_cv(feature_list, counts_t, vars_st, args):
             mean_acc = np.mean(scores)
             mean_std = np.std(scores)
             mean_outer_accs[feat] = mean_acc
+
         except ValueError:
             mean_outer_accs[feat] = np.nan
-
+    
     acc_df = pd.DataFrame.from_dict(mean_outer_accs, orient='index')
     acc_df = acc_df.rename_axis('feature').reset_index()
     acc_df = acc_df.rename(columns={0:'mean_acc'})
@@ -199,6 +201,7 @@ def rf_imp_scores(feature_list, counts_t, vars_st, args):
     }
 
     imp_dict = {}
+    best_models = {}
     for feat in feature_list:
         try:
             y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
@@ -208,6 +211,7 @@ def rf_imp_scores(feature_list, counts_t, vars_st, args):
             )
             result = search.fit(X, y)
             best_model = result.best_estimator_
+            best_models[feat] = best_model
             imp_df = pd.DataFrame((best_model.feature_importances_).transpose())
             imp_df['var'] = vars_st.columns
             imp_df = imp_df.rename(columns={0: 'importance'})
@@ -218,6 +222,10 @@ def rf_imp_scores(feature_list, counts_t, vars_st, args):
             imp_dict[feat] = imp_df
         except ValueError:
             imp_dict[feat] = np.nan
+
+    outf3 = os.path.join(args.output_dir, 'best_models_rf.pkl')
+    with open(outf3, 'wb') as file:
+        pickle.dump(best_models, file)
 
     df_names = []
     for i in imp_dict.keys():
