@@ -10,7 +10,6 @@ from sklearn.model_selection import (
     GridSearchCV,
     StratifiedKFold
 )
-from sklearn.pipeline import Pipeline
 from .is_valid import *
 from .__init__ import __version__
 
@@ -135,32 +134,23 @@ def rf_model(args):
 
     vars_st = genotypes_t.merge(st_encod, left_index=True, right_index=True)
 
-    pipeline = Pipeline([
-        ('classification', RandomForestClassifier())
-    ])
-
-    acc_df = rf_nested_cv(
-        feature_list_sub, counts_t, vars_st, args, pipeline)
+    acc_df = rf_nested_cv(feature_list_sub, counts_t, vars_st, args)
     outf1 = os.path.join(args.output_dir, 'acc_df_rf.txt')
     acc_df.to_csv(outf1, index=False, sep='\t')
 
-    imp_df_combined = rf_imp_scores(
-        feature_list_sub, counts_t, vars_st, args, pipeline)
+    imp_df_combined = rf_imp_scores(feature_list_sub, counts_t, vars_st, args)
     outf2 = os.path.join(args.output_dir, 'imp_df_rf.txt')
     imp_df_combined.to_csv(outf2, index=False, sep='\t')
 
-
-
     return
 
-def rf_nested_cv(feature_list, counts_t, vars_st, args, pipeline):
+def rf_nested_cv(feature_list, counts_t, vars_st, args):
     print('Estimating Random Forest model accuracy via nested CV')
 
     X = vars_st.values
-
     cv_outer = StratifiedKFold(n_splits=5, shuffle=True)
     cv_inner = StratifiedKFold(n_splits=3, shuffle=True)
-    # model = RandomForestClassifier()
+    model = RandomForestClassifier()
     grid = {
         'max_depth': args.max_depth, 
         'max_features': args.max_features,
@@ -173,7 +163,7 @@ def rf_nested_cv(feature_list, counts_t, vars_st, args, pipeline):
         try:
             y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
-                pipeline, grid, scoring='balanced_accuracy', cv=cv_inner, 
+                model, grid, scoring='balanced_accuracy', cv=cv_inner, 
                 refit=True, n_jobs=-1
             )
             scores = cross_val_score(
@@ -195,12 +185,12 @@ def rf_nested_cv(feature_list, counts_t, vars_st, args, pipeline):
 
     return acc_df
 
-def rf_imp_scores(feature_list, counts_t, vars_st, args, pipeline):
+def rf_imp_scores(feature_list, counts_t, vars_st, args):
     print('Generating Random Forest Gini Importance Scores for predictors')
 
     X = vars_st.values
     cv_split = StratifiedKFold(n_splits=5, shuffle=True)
-    # model = RandomForestClassifier()
+    model = RandomForestClassifier()
     grid = {
         'max_depth': args.max_depth, 
         'max_features': args.max_features,
@@ -213,7 +203,7 @@ def rf_imp_scores(feature_list, counts_t, vars_st, args, pipeline):
         try:
             y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
-                pipeline, grid, scoring='balanced_accuracy', 
+                model, grid, scoring='balanced_accuracy', 
                 cv=cv_split, refit=True
             )
             result = search.fit(X, y)
