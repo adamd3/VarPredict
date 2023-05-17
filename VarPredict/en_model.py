@@ -4,15 +4,14 @@ import argparse
 import numpy as np
 import os
 import pandas as pd
-from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import (
     cross_val_score,
     GridSearchCV,
     StratifiedKFold
 )
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import balanced_accuracy_score
 from .is_valid import *
 from .__init__ import __version__
 
@@ -120,39 +119,29 @@ def en_model(args):
 
     vars_st = genotypes_t.merge(st_encod, left_index=True, right_index=True)
 
-    preprocessor = ColumnTransformer(
-        transformers=[
-            ('numerical', StandardScaler(), slice(0, -1))  
-        ])
-
-    pipeline = Pipeline([
-        ('preprocessor', preprocessor),
-        ('model', LogisticRegression(penalty='elasticnet', solver='saga'))
-    ])
-
-    acc_df = en_nested_cv(
-        feature_list_sub, counts_t, vars_st, args, pipeline)
+    acc_df = en_nested_cv(feature_list_sub, counts_t, vars_st, args)
     outf1 = os.path.join(args.output_dir, 'acc_df_en.txt')
     acc_df.to_csv(outf1, index=False, sep='\t')
 
-    coef_df_combined = en_coefs(
-        feature_list_sub, counts_t, vars_st, args, pipeline)
+    coef_df_combined = en_coefs(feature_list_sub, counts_t, vars_st, args)
     outf2 = os.path.join(args.output_dir, 'coef_df_en.txt')
     coef_df_combined.to_csv(outf2, index=False, sep='\t')
 
     return
 
-def en_nested_cv(feature_list, counts_t, vars_st, args, pipeline):
+def en_nested_cv(feature_list, counts_t, vars_st, args):
+
     X = vars_st.values
     scaler = StandardScaler()
     X = scaler.fit_transform(X)  
 
     cv_outer = StratifiedKFold(n_splits=5, shuffle=True)
     cv_inner = StratifiedKFold(n_splits=3, shuffle=True)
+    model = LogisticRegression(penalty = 'elasticnet', solver = 'saga')
 
     grid = {
-        'model__C': args.c_vals,
-        'model__l1_ratio': args.l1_ratios
+        'C': args.c_vals, 
+        'l1_ratio': args.l1_ratios
     }
 
     mean_outer_accs={}
@@ -160,7 +149,7 @@ def en_nested_cv(feature_list, counts_t, vars_st, args, pipeline):
         try:
             y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
-                pipeline, grid, scoring='balanced_accuracy', cv=cv_inner, 
+                model, grid, scoring='balanced_accuracy', cv=cv_inner, 
                 refit=True, n_jobs=-1
             )
             scores = cross_val_score(
@@ -182,14 +171,14 @@ def en_nested_cv(feature_list, counts_t, vars_st, args, pipeline):
 
     return acc_df
 
-def en_coefs(feature_list, counts_t, vars_st, args, pipeline):
+def en_coefs(feature_list, counts_t, vars_st, args):
 
     X = vars_st.values
     scaler = StandardScaler()
     X = scaler.fit_transform(X)  
 
     cv_split = StratifiedKFold(n_splits=5, shuffle=True)
-    # model = LogisticRegression(penalty = 'elasticnet', solver = 'saga')
+    model = LogisticRegression(penalty = 'elasticnet', solver = 'saga')
 
     grid = {
         'C': args.c_vals, 
@@ -201,7 +190,7 @@ def en_coefs(feature_list, counts_t, vars_st, args, pipeline):
         y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
         try:
             search = GridSearchCV(
-                pipeline, grid, scoring='balanced_accuracy', 
+                model, grid, scoring='balanced_accuracy', 
                 cv=cv_split, refit=True
             )
             result = search.fit(X, y)

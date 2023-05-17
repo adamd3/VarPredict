@@ -1,13 +1,11 @@
 import argparse
-import os, sys
 from .__init__ import __version__
-from .rf_model import rf_parser
 from .en_model import en_parser
+from .rf_model import rf_parser
 
 class UltimateHelpFormatter(
     argparse.RawTextHelpFormatter, argparse.ArgumentDefaultsHelpFormatter):
     pass
-
 
 def main():
 
