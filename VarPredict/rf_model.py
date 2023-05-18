@@ -162,7 +162,7 @@ def rf_nested_cv(feature_list, counts_t, vars_st, args):
     mean_outer_accs = {}
     for feat in feature_list:
         try:
-            y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
+            y = pd.cut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
                 model, grid, scoring='balanced_accuracy', cv=cv_inner, 
                 refit=True, n_jobs=-1
@@ -204,7 +204,7 @@ def rf_imp_scores(feature_list, counts_t, vars_st, args):
     best_models = {}
     for feat in feature_list:
         try:
-            y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
+            y = pd.cut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
                 model, grid, scoring='balanced_accuracy', 
                 cv=cv_split, refit=True

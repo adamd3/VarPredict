@@ -147,7 +147,7 @@ def en_nested_cv(feature_list, counts_t, vars_st, args):
     mean_outer_accs={}
     for feat in feature_list:
         try:
-            y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
+            y = pd.cut(counts_t[feat].values, 2, labels = [0,1])
             search = GridSearchCV(
                 model, grid, scoring='balanced_accuracy', cv=cv_inner, 
                 refit=True, n_jobs=-1
@@ -188,7 +188,7 @@ def en_coefs(feature_list, counts_t, vars_st, args):
     coefs_dict = {}
     best_models = {}
     for feat in feature_list:
-        y = pd.qcut(counts_t[feat].values, 2, labels = [0,1])
+        y = pd.cut(counts_t[feat].values, 2, labels = [0,1])
         try:
             search = GridSearchCV(
                 model, grid, scoring='balanced_accuracy', 
